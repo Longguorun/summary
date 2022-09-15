@@ -1,5 +1,26 @@
 # 纲要
 
+## 计算机原理
+
+### 1.进程与线程
+
+1. 进程
+
+   一个进程就是一个程序的运行实例，每启动一个应用程序，操作系统都会为此程序创建一块内存，用来存放代码、数据数据、一个执行任务的主线程，我们把这样的一个运行环境叫进程。
+
+   一个进程关闭，操作系统则会回收为该进程分配的内存空间。
+
+2. 线程
+
+   线程是依附于进程的，而进程中使用多线程并行处理能提升运算效率。
+
+3. 进程与线程之间的关系
+
+   - 进程中的某一线程执行出错，都会导致整个进程的崩溃；
+   - 线程之间共享进程中的公共数据；
+   - 当一个进程关闭之后，操作系统会回收进程所占用的内存；
+   - 进程之间的内容相互隔离。
+
 ## 一、CSS
 
 ### 1.常规布局
@@ -382,7 +403,98 @@
 
    ![在这里插入图片描述](assets/4458babe7fae4db0bb16be3f73586d75.png)
 
-8. **垃圾回收机制**
+8. **javascript的执行机制**
+
+   javascript不支持多线程，通过事件循环(event loop)机制来实现异步任务。
+
+   - 任务队列
+
+     > 一个**任务**就是指计划由标准机制来执行的任何 JavaScript，如程序的初始化、事件触发的回调等。 
+     >
+     > 除了使用事件，你还可以使用 [`setTimeout()`](https://developer.mozilla.org/zh-CN/docs/Web/API/setTimeout) 或者 [`setInterval()`](https://developer.mozilla.org/zh-CN/docs/Web/API/setInterval) 来添加任务**。**
+     >
+     > 所谓任务，浅显来说就是代码块开始执行的入口(确切地说，是函数栈的入口。
+
+     > 主线程发起如果一个异步请求，相应的工作线程就接收这个请求并进行处理，期间，主线程发完请求之后就去干别的事情去了。等到工作线程的处理有了结果，浏览器内部就分配一个线程（event table）出来，通知主线程，刚刚发起的异步请求有了结果（这个通知过程其实是将回调函数推入消息队列（event queue）中，也叫事件队列，也叫任务队列），等到主线程处理完了当前调用栈中的任务，就会从这个消息队列中读取消息，也就是调用回调。这样就完成了一次异步操作。
+     >
+     > 而javascript执行代码的机制就是不断地从判断主线程是否为空，为空就读取消息队列（event queue）的回调并执行的过程。
+
+     ![盗的大佬的图](assets/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80NTg4ODcwMQ==,size_16,color_FFFFFF,t_70.png)
+
+   - 宏任务和微任务
+
+     - **宏任务**可以理解为每次执行栈执行的代码就是一个宏任务（包括每次从事件队列中获取一个事件回调并放到执行栈中执行）。
+
+       浏览器为了让 JS 内部宏任务 与 DOM 操作能够有序的执行，会在一个宏任务执行结束后，在下一个宏任务执行开始前，对页面进行重新渲染。
+
+       宏任务包含：
+
+       1. script(整体代码)
+       2. setTimeout、setInterval
+       3. I/O
+       4. UI交互事件
+       5. MessageChannel 等。
+
+     - **微任务**可以理解是在当前任务执行结束后需要立即执行的任务。也就是说，在当前任务后，在渲染之前，执行清空微任务。
+
+       所以它的响应速度相比宏任务会更快，因为无需等待 UI 渲染。
+
+       微任务包含：
+
+       1. Promise.then
+       2. MutaionObserver
+       3. process.nextTick(Node.js 环境)等。
+
+   - 执行顺序
+
+     1. 先执行主线程；
+     2. 遇到宏任务（macrotask）放到宏队列（macrotask）;
+     3. 遇到微任务（microtask）放到微队列（microtask）;
+     4. 主线程执行完毕；
+     5. 执行微队列（microtask，清空微队列），微队列（microtask）执行完毕；
+     6. 执行一次宏队列（macrotask）中的一个任务，执行完毕；
+     7. 执行微队列（microtask，清空微队列），执行完毕；
+     8. 依次循环……
+
+     一个例子：
+
+     ```js
+     console.log('start')
+     setTimeout(() => {
+       console.log('s1')
+       Promise.resolve().then(() => {
+         console.log('p2')
+       })
+       Promise.resolve().then(() => {
+         console.log('p3')
+       })
+     })
+     
+     Promise.resolve().then(() => {
+       console.log('p1')
+       setTimeout(() => {
+         console.log('s2')
+       })
+       setTimeout(() => {
+         console.log('s3')
+       })
+     })
+     console.log('end')
+     
+     //执行结果依次为
+     start
+     end
+     p1
+     s1
+     p2
+     p3
+     s2
+     s3
+     ```
+
+     
+
+9. **垃圾回收机制**
 
    > 垃圾回收其实主要是堆内存变量的回收。
 
@@ -415,7 +527,7 @@
 
         ![image-20210531145546643](assets/2f7c20abb4e8bc5ceb83e37ea155b663.png)
 
-9. **内存泄漏**
+10. **内存泄漏**
 
    > 内存泄漏是指由于疏忽或错误造成程序未能释放已经不在使用的内存。
 
@@ -429,7 +541,7 @@
 
    查找内存泄漏的方法：利用开发者工具抓内存图等。
 
-10. 宏内核与微内核？
+11. 宏内核与微内核？
 
 ### 2.语言特性
 
@@ -1617,46 +1729,471 @@
 
 ### 5.TypeScript相关
 
+待补充，除了泛型都比较好理解。
+
 ## 三、浏览器
 
 ### 1.浏览器体系结构
 
-- [ ] 浏览器原理/架构
-- [ ] web worker
-- [ ] V8垃圾回收机制
-- [ ] 内存泄漏、内存使用
-- [ ] 浏览器的事件循环机制
+1. 浏览器的架构原理
+
+   参考自http://chuquan.me/2018/01/21/browser-architecture-overview/。
+
+   1. 结构
+
+      ![img](assets/webp.webp)
+
+      分为八个部分，分别是：
+
+      1. **用户界面（User Interface）**
+
+         - 用户界面主要包括工具栏、地址栏、前进/后退按钮、书签菜单、可视化页面加载进度、智能下载处理、首选项、打印等。除了浏览器主窗口显示请求的页面之外，其他显示的部分都属于用户界面。
+
+         - 用户界面还可以与桌面环境集成，以提供浏览器会话管理或与其他桌面应用程序的通信。
+
+      2. **浏览器引擎（Browser Engine）**
+
+         - 浏览器引擎是一个可嵌入的组件，其为渲染引擎提供高级接口。
+         - 浏览器引擎可以加载一个给定的URI，并支持诸如：前进/后退/重新加载等浏览操作。
+         - 浏览器引擎提供查看浏览会话的各个方面的挂钩，例如：当前页面加载进度、JavaScript alert。
+         - 浏览器引擎还允许查询/修改渲染引擎设置。
+
+      3. **渲染引擎（Rendering Engine）**
+
+         - 渲染引擎为指定的URI生成可视化的表示。
+         - 渲染引擎能够显示HTML和XML文档，可选择CSS样式，以及嵌入式内容（如图片）。
+         - 渲染引擎能够准确计算页面布局，可使用“回流”算法逐步调整页面元素的位置。
+         - 渲染引擎内部包含HTML解析器。
+         - 常见的渲染引擎有Trident、Gecko、WebKit等。
+
+      4. **网络（Networking）**
+
+         - 网络系统实现HTTP和FTP等文件传输协议。 网络系统可以在不同的字符集之间进行转换，为文件解析MIME媒体类型。 网络系统可以实现最近检索资源的缓存功能。
+
+      5. **JavaScript解释器（JavaScript Interpreter）**
+
+         - JavaScript解释器能够解释并执行嵌入在网页中的JavaScript（又称ECMAScript）代码。 为了安全起见，浏览器引擎或渲染引擎可能会禁用某些JavaScript功能，如弹出窗口的打开。
+
+      6. **XML解析器（XML Parser）**
+
+         - XML解析器可以将XML文档解析成文档对象模型（Document Object Model，DOM）树。 XML解析器是浏览器架构中复用最多的子系统之一，几乎所有的浏览器实现都利用现有的XML解析器，而不是从头开始创建自己的XML解析器。
+
+      7. **显示后端（Display Backend）**
+
+         - 显示后端提供绘图和窗口原语，包括：用户界面控件集合、字体集合。
+
+      8. **数据持久层（Data Persistence）**
+
+         - 数据持久层将与浏览会话相关联的各种数据存储在硬盘上。 这些数据可能是诸如：书签、工具栏设置等这样的高级数据，也可能是诸如：Cookie，安全证书、缓存等这样的低级数据。
+
+   2. 渲染引擎工作流程
+
+      以HTML/JavaScript/CSS等文件作为输入，以可视化内容作为输出。
+
+      ![img](assets/webp-1663223486045-3.webp)
+
+      1. **Parsing HTML to Construct DOM Tree**
+
+         渲染引擎使用HTML解析器（调用XML解析器）解析HTML（XML）文档，将各个HTML（XML）元素逐个转化成DOM节点，从而生成**DOM树**。
+
+         同时，渲染引擎使用CSS解析器解析外部CSS文件以及HTML（XML）元素中的样式规则。元素中带有视觉指令的样式规则将用于下一步创建另一个树结构：渲染树。
+
+      2. **Render Tree construction**
+
+         渲染引擎使用第1步CSS解析器解析得到的样式规则，将其附着到DOM树上，从而构成**渲染树**。
+
+         渲染树包含多个带有视觉属性（如颜色和尺寸）的矩形。这些矩形的排列顺序就是它们将在屏幕上**显示的顺序**。
+
+      3. **Layout of Render Tree**
+
+         渲染树构建完毕之后，进入本阶段进行“布局”，也就是为每个节点分配一个应出现在屏幕上的**确切坐标**。
+
+      4. **Painting Render Tree**
+
+         渲染引擎将遍历渲染树，并调用**显示后端**将每个节点绘制出来。
+
+      渲染引擎组成模块
+
+      ![img](assets/webp-1663223727108-6.webp)
+
+2. 重绘与回流
+
+   > 当元素的样式发生变化时，浏览器需要触发更新，重新绘制元素。这个过程中，有两种类型的操作，即重绘与回流。
+
+   - **重绘(repaint)**: 当元素样式的改变不影响布局时，浏览器将使用重绘对元素进行更新，此时由于只需要UI层面的重新像素绘制，因此 **损耗较少**。
+   - **回流(reflow)**: 当元素的尺寸、结构或触发某些属性时，浏览器会重新渲染页面，称为回流。此时，浏览器需要重新经过计算，计算后还需要重新页面布局，因此是较重的操作。会触发回流的操作: 
+     - 页面初次渲染
+     - 浏览器窗口大小改变
+     - 元素尺寸、位置、内容发生改变
+     - 元素字体大小变化
+     - 添加或者删除可见的 dom 元素
+     - 激活 CSS 伪类（例如：:hover）
+     - 查询某些属性或调用某些方法
+       - clientWidth、clientHeight、clientTop、clientLeft
+       - offsetWidth、offsetHeight、offsetTop、offsetLeft
+       - scrollWidth、scrollHeight、scrollTop、scrollLeft
+       - getComputedStyle()
+       - getBoundingClientRect()
+       - scrollTo()
+
+   **回流必定触发重绘，重绘不一定触发回流。重绘的开销较小，回流的代价较高。**
+
+   减少回流与重绘能够提升网页程序的执行效率。
 
 ### 2.浏览器特性
 
-- [ ] 跨标签页通信
-- [ ] 浏览器显示网页的全过程
-- [ ] 重绘与回流
-- [ ] 浏览器存储
+1. 跨标签页通信
+
+   - 通过父页面`window.open()`和子页面`postMessage`
+     - 异步下，通过 `window.open('about: blank')` 和 `tab.location.href = '*'` 
+
+   - 设置同域下共享的`localStorage`与监听`window.onstorage`
+     - 重复写入相同的值无法触发
+     - 会受到浏览器隐身模式等的限制 
+
+   - 设置共享`cookie`与不断轮询脏检查(`setInterval`)
+
+   - 借助服务端或者中间层实现
+
+2. Web Worker
+
+   > 现代浏览器为`JavaScript`创造的 **多线程环境**。可以新建并将部分任务分配到`worker`线程并行运行，两个线程可 **独立运行，互不干扰**，可通过自带的 **消息机制** 相互通信。
+
+   - **基本用法:**
+
+     ```js
+     // 创建 worker
+     const worker = new Worker('work.js');
+     
+     // 向主进程推送消息
+     worker.postMessage('Hello World');
+     
+     // 监听主进程来的消息
+     worker.onmessage = function (event) {
+       console.log('Received message ' + event.data);
+     }
+     ```
+
+   - **限制:**
+
+     - 同源限制；
+
+     - 无法使用 `document` / `window` / `alert` / `confirm`；
+
+     - 无法加载本地资源。
+
+3. 浏览器存储
+
+   - 短暂性的时候，我们只需要将数据存在内存中，只在运行时可用
+
+   - 持久性存储，可以分为 浏览器端 与 服务器端
+     - 浏览器: 
+       - `cookie`: 通常用于存储用户身份，登录状态等
+         - http 中自动携带， 体积上限为 4K， 可自行设置过期时间
+       - `localStorage / sessionStorage`: 长久储存/窗口关闭删除， 体积限制为 4~5M
+       - `indexDB` 
+     - 服务器:
+       - 分布式缓存 redis
+       - 数据库 
 
 ## 四、TCP/IP
 
 ### 1.TCP/IP
 
-- [ ] TCP/IP
+1. TCP/IP模型
+
+   ![img](assets/92105d9114f8dddc58661a1571cf8d66a56b4044.jpg@884w_329h_progressive.webp)
+
+   - 应用层：应用层确定进程之间通信性质以满足用户需要。如万维网的HTTP协议，电子邮件的SMTP协议，文件传送的FTP协议等。
+
+   - 传输层：传输层的任务就是**负责主机中的两个进程间的通信**。
+
+     因特网的传输层可使用两种不同的协议：面向连接的传输控制协议TCP（Transmission Control Protocl）和无连接的用户数据报协议UDP（User Datagram Protocol）。
+
+     **在分组交换网内的各个交换结点机都没有运输层。运输层智能存在于分组交换网外面的主机中**。传输层以上的各层就不再关心信息传输的问题了。因此，运输层就成为计算机网络体系结构中非常重要的一层。
+
+   - 网络层：又叫IP层，网络层负责为分组交换网上的不同主机提供通信。在发送数据时，**网络层将传输层产生的报文段或用户数据封装成分组或包进行传送**。
+
+   - 数据链路层：在发送数据时，数据链路层的任务是将在网络层传下来的IP数据报**组装成帧**，在两个相邻结点间的链路上传送以帧为单位的数据。
+
+   - 物理层：物理层的任务就是**透明地传送比特流**。如一些物理媒介：双绞线、光缆等。
+
+2. TCP协议
+
+   > 传输控制协议（TCP，Transmission Control Protocol）是一种**面向连接的、可靠的、基于字节流的**传输层通信协议。
+
+   工作方式：
+
+   ![img](assets/format,png.png)
 
 ### 2.HTTP/HTTPS
 
-- [ ] http/https
-- [ ] websocket
+1. HTTP
+
+   - 请求报文首部
+
+     1. 请求行：`[方法] [URI] [协议版本]`， 如：`GET /index.html HTTP/1.1`
+     2. 请求首部字段
+     3. 通用首部字段
+     4. 实体首部字段
+     5. 其他
+
+     ![img](assets/format,png-1663234720169-15.png)
+
+   - 响应报文首部
+
+     1. 状态行：`[协议版本] [状态码] [状态码的原因短语]`，如：`HTTP/1.1 200 OK`
+     2. 响应首部字段
+     3. 通用首部字段
+     4. 实体首部字段
+     5. 其他
+
+     ![img](assets/format,png-1663234720169-16.png)
+     
+   - 响应状态码
+
+     - 1XX 信息性状态码
+
+       接收的请求正在处理。
+
+     - 2XX 成功状态码
+
+       请求正常处理完毕。
+
+     - 3XX 重定向
+
+       浏览器需要执行某些特殊的处理以正确处理请求。
+
+     - 4XX 客户端错误
+
+       表明客户端是发生错误的所在。
+
+     - 5XX 服务器错误
+
+       表明服务器本身发生错误。
+
+2. HTTPS
+
+   HTTP的缺点：
+
+   - 通信使用明文，内容可能会被窃听
+   - 不验证通信方的身份，因此可能遭遇伪装
+   - 无法证明报文的完整性，所以可能已遭篡改
+
+   因此诞生了HTTPS，HTTP + 加密 + 认证 + 完整性保护 = HTTPS（HTTP Secure）。
+
+   HTTPS和HTTP的差异在于，HTTP的通信接口部分用SSL（Secure Socket Layer）和TLS（Transport Layer Securit）替代。
+
+   针对HTTP的缺点，HTTPS的对应解决方式为：
+
+   - 采用混合加密方式
+
+     采用公开密钥方式和共享密钥方式结合的方式，在保证通信安全的情况下，也能最大限度的保证处理速度。
+
+     - 公开密钥加密：
+
+       发送密钥的一方使用对方的公开密钥进行加密处理，对方收到加密的信息后，再使用自己的私有密钥进行解密。
+
+     - 共享密钥加密：
+
+       两方使用同一密钥进行加密和解密。
+
+   - 证明公开密钥正确性的证书
+
+     使用由数字证书认证机构（CA）和其相关机关颁发的公开密钥证书。数字证书认证机构是客户端和服务器都可信赖的第三方机构。
+
+   - MAC报文摘要
+
+     Message Authentication Code，MAC是指消息认证码（带密钥的[Hash函数](https://baike.baidu.com/item/Hash函数/10555888)），可用于数据源发认证和完整性校验。
+
+3. Websocket
+
+   WebSocket是一种在单个[TCP](https://baike.baidu.com/item/TCP)连接上进行[全双工](https://baike.baidu.com/item/全双工)通信的协议。
 
 ### 3.前端网络开发相关
 
-- [ ] 跨域
-- [ ] node event loop六个阶段
+1. 跨域及其解决方法
+
+   > 跨域，一般指xhr网络请求与浏览器的访问地址之间在网络协议、域名和端口中有任意一个不一致造成的浏览器同源策略阻止。
+
+   - 解决方法
+
+     1. jsonp：原理是利用scrip标签访问链接不会跨域的特性，通过script标签访问特定的数据，并将服务器返回的数据通过回调函数异步的使用；
+
+     2. 浏览器关闭同源策略，chrome：
+
+        ```
+        "C:\Program Files\Google\Chrome\Application\chrome.exe" --allow-file-access-from-files --user-data-dir="C:\Users\bst\MyChromeUserData" --disable-web-security
+        ```
+
+     3. 同源代理转发，通过另一个与浏览器同源的代理服务器，转发数据；
+
+     4. 服务端允许CORS，将返回数据配置为不做同源限制。
 
 ### 4.网络安全相关
 
-- [ ] 网络安全
+1. 跨站脚本攻击（XSS）
+
+   - 概念
+
+     XSS：Cross Site Scripting，跨站脚本攻击。指恶意攻击者往web页面中注入XSS脚本代码，当用户打开该页面时，注入其中的脚本代码就会执行，从而达到恶意攻击用户的目的。
+
+   - 分类
+
+     1. 反射型XSS，又称为非持久型XSS：攻击相较于访问者而言只有一次。
+
+     2. 储存型XSS，又称持久型XSS：恶意脚本代码被存储在了服务器/数据库中，每次访问这个资源的用户都会被攻击。
+
+   - 危害示例
+
+     1. 劫持访问
+
+     2. cookies盗用
+
+     3. 配合csrf攻击完成恶意请求
+
+   - 防范手段
+
+     1. 过滤标签，诸如<script> <img> <a>等标签进行过滤
+
+     2. 在编码时，对一些常见的符号（有其他意义的代码符号），进行编码转化，如 < >等
+
+     3. 限制文本的输入长度，因为一般的攻击代码会很长
+
+   参考自：https://zhuanlan.zhihu.com/p/26177815
+
+2. 跨站点伪造请求
+
+   - 定义
+
+     CSRF(Cross-site request forgery)：跨站伪造请求，是一种挟制用户在已登录的web应用上执行非本意的操作的攻击方法。
+
+     与XSS的区别在于，XSS利用的是用户对网页服务器的信任；而CSRF利用的是，网页服务器对用户浏览器的信任。
+
+     比如，在获取到用户的认证密钥后，以此密钥去向服务器发送恶意请求。
+
+   - 防范手段
+
+     1. 涉及敏感操作的请求改为POST请求
+     2. 用户验证码
+     3. 请求来源限制，验证http referer字段
+     4. 额外验证机制，token使用
+
+
+   参考自https://blog.csdn.net/weixin_40482816/article/details/114301717
 
 ## 五、Vue
 
 ### 1.生命周期
+
+- `_init_`  
+  - `initLifecycle/Event`，往`vm`上挂载各种属性
+  - `callHook: beforeCreated`: 实例刚创建
+  - `initInjection/initState`: 初始化注入和 data 响应性
+  - `created`: 创建完成，属性已经绑定， 但还未生成真实`dom`
+  - 进行元素的挂载： `$el / vm.$mount()`
+  - 是否有`template`: 解析成`render function`
+    - `*.vue`文件: `vue-loader`会将`<template>`编译成`render function`
+  - `beforeMount`: 模板编译/挂载之前
+  - 执行`render function`，生成真实的`dom`，并替换到`dom tree`中
+  - `mounted`: 组件已挂载
+
+- `update`:
+  - 执行`diff`算法，比对改变是否需要触发UI更新
+  - `flushScheduleQueue`
+    - `watcher.before`: 触发`beforeUpdate`钩子		- `watcher.run()`: 执行`watcher`中的 `notify`，通知所有依赖项更新UI
+  - 触发`updated`钩子: 组件已更新
+
+- `actived / deactivated(keep-alive)`: 不销毁，缓存，组件激活与失活
+
+- `destroy`:
+  - `beforeDestroy`: 销毁开始
+  - 销毁自身且递归销毁子组件以及事件监听
+    - `remove()`: 删除节点
+    - `watcher.teardown()`: 清空依赖
+    - `vm.$off()`: 解绑监听
+  - `destroyed`: 完成后触发钩子
+
+```js
+new Vue({})
+
+// 初始化Vue实例
+function _init() {
+	 // 挂载属性
+    initLifeCycle(vm) 
+    // 初始化事件系统，钩子函数等
+    initEvent(vm) 
+    // 编译slot、vnode
+    initRender(vm) 
+    // 触发钩子
+    callHook(vm, 'beforeCreate')
+    // 添加inject功能
+    initInjection(vm)
+    // 完成数据响应性 props/data/watch/computed/methods
+    initState(vm)
+    // 添加 provide 功能
+    initProvide(vm)
+    // 触发钩子
+    callHook(vm, 'created')
+		
+	 // 挂载节点
+    if (vm.$options.el) {
+        vm.$mount(vm.$options.el)
+    }
+}
+
+// 挂载节点实现
+function mountComponent(vm) {
+	 // 获取 render function
+    if (!this.options.render) {
+        // template to render
+        // Vue.compile = compileToFunctions
+        let { render } = compileToFunctions() 
+        this.options.render = render
+    }
+    // 触发钩子
+    callHook('beforeMounte')
+    // 初始化观察者
+    // render 渲染 vdom， 
+    vdom = vm.render()
+    // update: 根据 diff 出的 patchs 挂载成真实的 dom 
+    vm._update(vdom)
+    // 触发钩子  
+    callHook(vm, 'mounted')
+}
+
+// 更新节点实现
+funtion queueWatcher(watcher) {
+	nextTick(flushScheduleQueue)
+}
+
+// 清空队列
+function flushScheduleQueue() {
+	 // 遍历队列中所有修改
+    for(){
+	    // beforeUpdate
+        watcher.before()
+         
+        // 依赖局部更新节点
+        watcher.update() 
+        callHook('updated')
+    }
+}
+
+// 销毁实例实现
+Vue.prototype.$destory = function() {
+	 // 触发钩子
+    callHook(vm, 'beforeDestory')
+    // 自身及子节点
+    remove() 
+    // 删除依赖
+    watcher.teardown() 
+    // 删除监听
+    vm.$off() 
+    // 触发钩子
+    callHook(vm, 'destoryed')
+}
+```
 
 ### 2.响应式原理
 
